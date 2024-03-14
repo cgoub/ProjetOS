@@ -1,23 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 // Structure de fichier
 typedef struct {
     char* filename;
     int cursor_position;
-    FILE* file_pointer;
+    int file_descriptor;
 } file;
 
 // Fonction de formatage de la partition
 int myFormat(char* partitionName) {
-    // Ici, vous pouvez implémenter le code pour créer le fichier de partition
-    // Par exemple :
-    FILE* partition = fopen(partitionName, "w");
-    if (partition == NULL) {
+    int partition = open(partitionName, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (partition == -1) {
         return -1; // Échec du formatage
     }
-    fclose(partition);
+    close(partition);
     return 0; // Formatage réussi
 }
 
@@ -30,9 +31,9 @@ file* myOpen(char* fileName) {
 
     new_file->filename = strdup(fileName);
     new_file->cursor_position = 0;
-    new_file->file_pointer = fopen(fileName, "a+");
+    new_file->file_descriptor = open(fileName, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 
-    if (new_file->file_pointer == NULL) {
+    if (new_file->file_descriptor == -1) {
         free(new_file->filename);
         free(new_file);
         return NULL; // Échec d'ouverture de fichier
@@ -47,8 +48,8 @@ int myWrite(file* f, void* buffer, int nBytes) {
         return -1; // Paramètres invalides
     }
 
-    int bytes_written = fwrite(buffer, 1, nBytes, f->file_pointer);
-    if (bytes_written < nBytes) {
+    int bytes_written = write(f->file_descriptor, buffer, nBytes);
+    if (bytes_written < 0) {
         return -1; // Erreur d'écriture
     }
 
@@ -62,9 +63,8 @@ int myRead(file* f, void* buffer, int nBytes) {
         return -1; // Paramètres invalides
     }
 
-    fseek(f->file_pointer, f->cursor_position, SEEK_SET);
-    int bytes_read = fread(buffer, 1, nBytes, f->file_pointer);
-    if (bytes_read < nBytes) {
+    int bytes_read = read(f->file_descriptor, buffer, nBytes);
+    if (bytes_read < 0) {
         return -1; // Erreur de lecture
     }
 
@@ -78,8 +78,18 @@ void mySeek(file* f, int offset, int base) {
         return; // Paramètre invalide
     }
 
-    fseek(f->file_pointer, offset, base);
-    f->cursor_position = ftell(f->file_pointer);
+    f->cursor_position = lseek(f->file_descriptor, offset, base);
+}
+
+// Fonction de fermeture de fichier
+void myClose(file* f) {
+    if (f == NULL) {
+        return; // Paramètre invalide
+    }
+
+    close(f->file_descriptor);
+    free(f->filename);
+    free(f);
 }
 
 // Fonction de test basique
@@ -114,10 +124,8 @@ int main() {
     read_buffer[strlen(buffer)] = '\0'; // Ajout du caractère de fin de chaîne
     printf("Contenu du fichier : %s\n", read_buffer);
 
-    // Nettoyage
-    fclose(test_file->file_pointer);
-    free(test_file->filename);
-    free(test_file);
+    // Fermeture du fichier
+    myClose(test_file);
 
     return 0;
 }
