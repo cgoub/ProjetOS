@@ -15,7 +15,7 @@
 int totalBlocks = PARTITION_SIZE / BLOCK_SIZE;
 
 typedef struct {
-    char * fileName;
+    char fileName[256]; 
     int fileSize;
     int startBlock;
     int isOpen;
@@ -74,7 +74,7 @@ file *myOpen(const char* partitionName, const char* fileName) {
         for (int i = 0; i < MAX_FILES; i++) {
             read(partition, &f, sizeof(file));
             if (!f.isUsed) {
-                strncpy(f.fileName, fileName, sizeof(f.fileName) - 1);
+                strcpy(f.fileName, fileName);
                 f.fileSize = 0;
                 f.startBlock = MAX_FILES * sizeof(file) + i * BLOCK_SIZE;
                 f.isOpen = 1;
