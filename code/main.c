@@ -20,13 +20,13 @@ int myFormat(char* partitionName) {
     strcpy(partition,partitionName);
 
     // Ajout de fichier vide dans la partition
-    f.nom="";
+    //f.nom="";
     f.position=0;
     f.dispo=1;
     f.taille=0;
     for (int i = 0; i < PARTITION_SIZE; i += BLOCK_SIZE) {
         f.debut=i;
-        printf("%d\n",i);
+        printf("%d\n",f.debut);
         write(open_partition, &f, sizeof(file));
     }
     close(open_partition);
@@ -46,7 +46,7 @@ file* myOpen(char* fileName) {
 
     read(open_partition, new_file, sizeof(file));
     //Parcours de la partition
-    while(i<PARTITION_SIZE && strcmp(new_file->nom, fileName) != 0){
+    while(i<PARTITION_SIZE && new_file->dispo !=1 && strcmp(new_file->nom, fileName) != 0){
         lseek(open_partition, i * BLOCK_SIZE, SEEK_SET);
         read(open_partition, new_file, sizeof(file));
         i+=BLOCK_SIZE;
@@ -81,17 +81,18 @@ file* myOpen(char* fileName) {
 
 // Fonction d'écriture dans un fichier
 int myWrite(file* f, void* buffer, int nBytes) {
-    if (f == NULL || f->dispo == 1 || buffer == NULL || nBytes <= 0) {
+    if (f == NULL || buffer == NULL || nBytes <= 0) {
+        perror("parametres invalides");
         return -1; // Paramètres invalides
     }
-
     int open_partition = open(partition, O_RDWR); // Ouvrez la partition en lecture/écriture
     if (open_partition == -1) {
+        perror("echec de l'ouverture");
         return -1; // Échec de l'ouverture
     }
 
     // Positionnez le curseur au début du fichier dans la partition
-    lseek(open_partition, f->position, SEEK_SET);
+    lseek(open_partition, f->debut, SEEK_SET);
     int bytes_written = write(open_partition, buffer, nBytes);
     if (bytes_written < 0) {
         perror("erreur d'écriture");
@@ -100,12 +101,14 @@ int myWrite(file* f, void* buffer, int nBytes) {
 
     f->taille += bytes_written;
     close(open_partition);
+    printf("nb bytes ecrit: %d",bytes_written);
     return bytes_written;
 }
 
 // Fonction de lecture depuis un fichier
 int myRead(file* f, void* buffer, int nBytes) {
     if (f == NULL || buffer == NULL || nBytes <= 0) {
+        perror("parametres invalides");
         return -1; // Paramètres invalides
     }
     printf("%d\n",f->debut);
@@ -156,20 +159,25 @@ void mySeek(file* f, int offset, int base) {
 
 // Fonction de test basique
 int main() {
-    char buffer[10];
+    char buffer1[10];
     myFormat("test.bin");
     file* test=myOpen("test.txt");
-    myRead(test,buffer,10);
-    printf("%s\n",buffer);
+    myRead(test,buffer1,10);
+    printf("myread test1: %s\n",buffer1);
     
     file* test2=myOpen("test2.txt");
-    myRead(test2,buffer,10);
-    printf("%s\n",buffer);
+    myRead(test2,buffer1,10);
+    printf("myRead test2: %s\n",buffer1);
 
     char write[15]="bjr c'est moi";
-    myWrite(test,write,5);
-    myRead(test,buffer,10);
-    printf("%s\n",buffer);
+    myWrite(test,write,15);
+    myRead(test,buffer1,10);
+    printf("myRead 3: %s\n",buffer1);
+
+    char write2[15]="hello world";
+    myWrite(test2,write2,15);
+    myRead(test2,buffer1,10);
+    printf("myRead 4: %s\n",buffer1);
 
     // // Test de création de fichier
     // if (myFormat("partition.txt") != 0) {

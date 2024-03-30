@@ -1,6 +1,6 @@
 #define BLOCK_SIZE 2048 // Taille de bloc pour notre partition
-// #define PARTITION_SIZE 32 * 1024 * 1024 // Taille de la partition en octets (32 Mo)
-#define PARTITION_SIZE 2048*3 // Taille de la partition en octets (32 Mo)
+#define PARTITION_SIZE 32 * 1024 * 1024 // Taille de la partition en octets (32 Mo)
+// #define PARTITION_SIZE 2048*3 // Taille de la partition en octets (32 Mo)
 
 
 // Structure de fichier
