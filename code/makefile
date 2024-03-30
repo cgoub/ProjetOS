@@ -10,12 +10,17 @@ OBJS = $(SRCS:.c=.o)
 # Exécutable
 EXEC = main
 
-all: $(EXEC)
+# Doxygen configuration file
+DOXYFILE = main.c
+
+
+all: $(EXEC) 
 
 # Règle de construction de l'exécutable
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(EXEC)
 
+	
 # Règle de construction des fichiers objets
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -23,3 +28,6 @@ $(EXEC): $(OBJS)
 # Nettoyer les fichiers objets et l'exécutable
 clean:
 	rm -f $(OBJS) $(EXEC)
+
+
+	
