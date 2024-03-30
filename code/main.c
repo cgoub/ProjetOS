@@ -99,7 +99,6 @@ int myRead(file* f, void* buffer, int nBytes) {
         perror("parametres invalides");
         return -1; // Paramètres invalides
     }
-    // printf("%d\n",f->debut);
     int open_partition = open(partition, O_RDONLY);
     lseek(open_partition, (f->debut+sizeof(file)), SEEK_SET);
     int bytes_read = read(open_partition, buffer, nBytes);
@@ -136,70 +135,89 @@ void mySeek(file* f, int offset, int base) {
 }
 
 
-// Fonction de test basique
 int main() {
-    char buffer1[10];
-    myFormat("test.bin");
-    file f;
-    int open_partition = open(partition, O_RDWR);
-    file* test=myOpen("test.txt");
-    printf("dispo sortie %d\n",test->dispo);
-    myRead(test,buffer1,10);
-    printf("myread test1: %s\n",buffer1);
-    printf("\n");
-    file* test2=myOpen("test2.txt");
-    myRead(test2,buffer1,10);
-    printf("nom test2: %s\n",test2->nom);
-    printf("myRead test2: %s\n",buffer1);
+    char buffer1[100]; // Utilisé pour la lecture/écriture des fichiers
+    int choice;
+    file* opened_file = NULL; // Pour suivre le fichier ouvert, s'il y en a un
+    char partitionName[] = "partition.bin";
 
-    char write[15]="bjr c'est moi";
-    myWrite(test,write,15);
-    myRead(test,buffer1,15);
-    printf("nom test1 :%s\n",test->nom);
-    printf("myRead 3: %s\n",buffer1);
+    while (1) {
+        printf("\nMenu:\n");
+        printf("1. Initialiser / Réinitialiser la partition\n");
+        printf("2. Ouvrir un fichier\n");
+        printf("3. Ecrire dans le fichier\n");
+        printf("4. Lire un fichier\n");
+        printf("5. Donner la taille d'un fichier (en octets)\n");
+        printf("6. Quitter\n");
+        printf("Choix : ");
+        scanf("%d", &choice);
+        getchar(); // Pour consommer le caractère de nouvelle ligne
 
+        switch (choice) {
+            case 1:
+                if (myFormat(partitionName) == 0) {
+                    printf("Partition initialisée avec succès.\n");
+                } else {
+                    printf("Échec de l'initialisation de la partition.\n");
+                }
+                break;
 
-    char buffer2[10];
-    char write2[15]="hello world";
-    myWrite(test2,write2,15);
-    myRead(test2,buffer2,15);
-    printf("myRead 4: %s\n",buffer2);
+            case 2:
+                
+                printf("Entrez le nom du fichier à ouvrir : ");
+                scanf("%s", buffer1);
+                opened_file = myOpen(buffer1);
+                if (opened_file != NULL) {
+                    printf("Fichier ouvert avec succès. Emplacement dans la partition : %d\n", opened_file->debut);
+                } else {
+                    printf("Échec de l'ouverture du fichier.\n");
+                }
+                break;
 
-    myRead(test,buffer1,15);
-    printf("myRead 5: %s\n",buffer1);
+            case 3:
+                if (opened_file == NULL) {
+                    printf("Aucun fichier ouvert.\n");
+                    break;
+                }
+                printf("Entrez le texte à écrire dans le fichier : ");
+                scanf("%s", buffer1);
+                myWrite(opened_file, buffer1, strlen(buffer1));
+                printf("Écriture terminée.\n");
+                break;
 
-    // // Test de création de fichier
-    // if (myFormat("partition.txt") != 0) {
-    //     printf("Erreur lors du formatage de la partition.\n");
-    //     return 1;
-    // }
+            case 4:
+                if (opened_file == NULL) {
+                    printf("Aucun fichier ouvert.\n");
+                    break;
+                }
+                myRead(opened_file, buffer1, sizeof(buffer1));
+                printf("Contenu du fichier : %s\n", buffer1);
+                break;
 
-    // // Test d'ouverture de fichier
-    // file* test_file = myOpen("test.txt");
-    // if (test_file == NULL) {
-    //     printf("Erreur lors de l'ouverture du fichier.\n");
-    //     return 1;
-    // }
+            case 5:
+                if (opened_file == NULL) {
+                    printf("Aucun fichier ouvert.\n");
+                    break;
+                }
+                printf("Taille du fichier : %d octets\n", opened_file->taille);
+                break;
 
-    // // Test d'écriture dans le fichier
-    // char buffer[20] = "Hello, world!";
-    // if (myWrite(test_file, buffer, strlen(buffer)) != strlen(buffer)) {
-    //     printf("Erreur lors de l'écriture dans le fichier.\n");
-    //     return 1;
-    // }
+            case 6:
+                // Quitter le programme
+                if (opened_file != NULL) {
+                    // Si un fichier est ouvert, le fermer
+                    // myClose(opened_file);
+                    opened_file = NULL;
+                }
+                printf("Au revoir !\n");
+                exit(0);
+                break;
 
-    // // Test de lecture depuis le fichier
-    // char read_buffer[20];
-    // mySeek(test_file, 0, SEEK_SET);
-    // if (myRead(test_file, read_buffer, strlen(buffer)) != strlen(buffer)) {
-    //     printf("Erreur lors de la lecture depuis le fichier.\n");
-    //     return 1;
-    // }
-    // read_buffer[strlen(buffer)] = '\0'; // Ajout du caractère de fin de chaîne
-    // printf("Contenu du fichier : %s\n", read_buffer);
-
-    // // Fermeture du fichier
-    // myClose(test_file);
+            default:
+                printf("Choix invalide. Veuillez entrer un nombre entre 1 et 6.\n");
+                break;
+        }
+    }
 
     return 0;
 }
