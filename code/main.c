@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include "main.h"
 
-char partition [20]="test.bin";
+char partition [20]="partition.bin";
 
 // Fonction de formatage de la partition
 int myFormat(char* partitionName) {
@@ -139,7 +139,6 @@ int main() {
     char buffer1[100]; // Utilisé pour la lecture/écriture des fichiers
     int choice;
     file* opened_file = NULL; // Pour suivre le fichier ouvert, s'il y en a un
-    char partitionName[] = "partition.bin";
 
     while (1) {
         printf("\nMenu:\n");
@@ -155,11 +154,15 @@ int main() {
 
         switch (choice) {
             case 1:
-                if (myFormat(partitionName) == 0) {
+                
+                printf("Entrez le nom de la partition a créer/formater avec \".bin\" \n");
+                scanf("%s", buffer1);
+                if (myFormat(buffer1) == 0) {
                     printf("Partition initialisée avec succès.\n");
                 } else {
                     printf("Échec de l'initialisation de la partition.\n");
                 }
+
                 break;
 
             case 2:
@@ -180,7 +183,7 @@ int main() {
                     break;
                 }
                 printf("Entrez le texte à écrire dans le fichier : ");
-                scanf("%s", buffer1);
+                scanf("%[^\n]s", buffer1);
                 myWrite(opened_file, buffer1, strlen(buffer1));
                 printf("Écriture terminée.\n");
                 break;
