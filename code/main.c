@@ -8,7 +8,12 @@
 
 char partition [20]="partition.bin";
 
-// Fonction de formatage de la partition
+/**
+ * @brief Fonction permettant le formatage/l'ouverture d'une partition
+ * 
+ * @param partitionName Nom de la partition a créer
+ * @return int Renvoie -1 si il y a une erreur, renvoie 0 sinon.
+ */
 int myFormat(char* partitionName) {
     file f;
     int j=1;
@@ -32,7 +37,12 @@ int myFormat(char* partitionName) {
     return 0; // Formatage réussi
 }
 
-// Fonction d'ouverture de fichier
+/**
+ * @brief Fonction qui permet d'ouverir un fichier dans la partition choisie.
+ * 
+ * @param fileName Nom du fichier à ouvrir
+ * @return file* Renvoie le fichier ouvert, renvoie NULL sinon
+ */
 file* myOpen(char* fileName) {
     file* new_file=(file*)malloc(sizeof(file));
     file f;
@@ -67,7 +77,12 @@ file* myOpen(char* fileName) {
     return new_file;
 }
 
-
+/**
+ * @brief Fonction permettant d'afficher les informations d'un fichier en particulier.
+ * 
+ * @param fileName Nom du fichier à analyser.
+ * @return int Renvoie -1 en cas d'erreur, renvoie 0 sinon.
+ */
 int showInfo(char * fileName){
     int i;
     int open_partition = open(partition, O_RDWR);
@@ -91,6 +106,11 @@ int showInfo(char * fileName){
     return -1; // Le fichier n'existe pas
 }
 
+/**
+ * @brief Affiche tous les fichiers ouverts dans la partition.
+ * 
+ * @return int Renvoie 0 si tout c'est bien déroulé, renvoie -1 sinon.
+ */
 int showFiles(){
     file f;
     int i=0;
@@ -120,7 +140,14 @@ int showFiles(){
     return 0;
 }
 
-// Fonction d'écriture dans un fichier
+/**
+ * @brief Fonction permettant d'écrire dans un fichier appartenant à la partition.
+ * 
+ * @param f Le fichier qu'on veut éditer.
+ * @param buffer Le texte à insérer dans le fichier.
+ * @param nBytes Le nombre de caractères à insérer.
+ * @return int Renvoie 0 si tout c'est bien déroulé, renvoie -1 sinon.
+ */
 int myWrite(file* f, void* buffer, int nBytes) {
     if (f == NULL || buffer == NULL || nBytes <= 0) {
         return -1; // Paramètres invalides
@@ -148,7 +175,14 @@ int myWrite(file* f, void* buffer, int nBytes) {
     return bytes_written;
 }
 
-// Fonction de lecture depuis un fichier
+/**
+ * @brief Fonction permettant de lire un fichier entré en paramètre.
+ * 
+ * @param f Le fichier qu'on veut lire.
+ * @param buffer Le texte à lu est stocké dans le buffer.
+ * @param nBytes Le nombre de caractères à lire.
+ * @return int Renvoie 0 si tout c'est bien déroulé, renvoie -1 sinon.
+ */
 int myRead(file* f, void* buffer, int nBytes) {
     if (f == NULL || buffer == NULL || nBytes <= 0) {
         return -1; // Paramètres invalides
@@ -164,7 +198,13 @@ int myRead(file* f, void* buffer, int nBytes) {
     return bytes_read;
 }
 
-// Fonction de déplacement du curseur
+/**
+ * @brief Fonction permettant de déplacer l'emplacement de la tête de lecture d'un fichier.
+ * 
+ * @param f Le fichier dans lequel on souhaite se déplacer
+ * @param offset La distance à laquelle on souhaite se déplacer
+ * @param base Le parèmetre en fonction du quel on veut se déplacer (SEEK_SET, SEEK_CUR, SEEK_END).
+ */
 void mySeek(file* f, int offset, int base) {
     if (f == NULL || f->dispo == 1) {
         return; // Paramètre invalide
