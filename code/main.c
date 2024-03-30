@@ -1,3 +1,13 @@
+/**
+ * @file main.c
+ * @author GOUBERT Clement, CALIF Nicolas, WU Jingyi
+ * @brief Bibliothèque de gestion de fichier réalisé en c simulant celle d'UNIX.
+ * @version 2
+ * @date 2024-03-30
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +16,8 @@
 #include <sys/stat.h>
 #include "main.h"
 
-char partition [20]="partition.bin";
+
+char partition [20]="partition.bin"; /*!< Variable global permettant de garder en mémoire la partition*/
 
 /**
  * @brief Fonction permettant le formatage/l'ouverture d'une partition
@@ -205,7 +216,7 @@ int myRead(file* f, void* buffer, int nBytes) {
  */
 void mySeek(file* f, int offset, int base) {
     if (f == NULL || f->dispo == 1) {
-        return; // Paramètre invalide
+        return; /* Paramètre invalide */ 
     }
 
     switch(base){
@@ -219,12 +230,16 @@ void mySeek(file* f, int offset, int base) {
             f->position = f->taille + f->debut;
             break;
         default:
-            return; 
+            return; /* Base invalide */ 
     }
 
 }
 
-
+/**
+ * @brief Le main permettant de tester toutes les fonctions réalisées pour la bibliothèque.
+ * 
+ * @return int 
+ */
 int main() {
     char buffer1[100]; // Utilisé pour la lecture/écriture des fichiers
     int choice;
@@ -261,7 +276,8 @@ int main() {
                 scanf("%s", buffer1);
                 if (myFormat(buffer1) == 0) {
                     printf("Partition initialisée avec succès.\n");
-                } else {
+                } 
+                else {
                     printf("Échec de l'initialisation de la partition.\n");
                 }
 
