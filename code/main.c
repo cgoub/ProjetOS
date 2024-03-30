@@ -202,7 +202,9 @@ int main() {
                     printf("Aucun fichier ouvert.\n");
                     break;
                 }
+                printf("Nom du fichier : %s\n", opened_file->nom);
                 printf("Taille du fichier : %d octets\n", opened_file->taille);
+                printf("Emplacement dans la partition : %d\n", opened_file->debut);
                 break;
 
             case 6:
