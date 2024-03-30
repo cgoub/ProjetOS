@@ -114,7 +114,7 @@ int showInfo(char * fileName){
 int showFiles(){
     file f;
     int i=0;
-    int j=0;
+    int j=1;
     int open_partition = open(partition, O_RDWR);
     if (open_partition == -1) {
         return -1; // Échec de l'ouverture
@@ -135,7 +135,7 @@ int showFiles(){
         printf("Aucun fichier trouvé.\n");
     }    
     else{
-        printf("Nombre total de fichier: %d\n",j);
+        printf("\nNombre total de fichier: %d\n",j-1);
     }
     return 0;
 }
@@ -156,8 +156,6 @@ int myWrite(file* f, void* buffer, int nBytes) {
     if (open_partition == -1) {
         return -1; // Échec de l'ouverture
     }
-    printf("debut : %d",f->debut);
-    printf("position : %d",f->position);
 
     // Positionnez le curseur au début du fichier dans la partition
     lseek(open_partition, f->position , SEEK_SET);
@@ -231,7 +229,18 @@ int main() {
     char buffer1[100]; // Utilisé pour la lecture/écriture des fichiers
     int choice;
     file* opened_file = NULL; // Pour suivre le fichier ouvert, s'il y en a un
+    int init=0;
 
+    while(init!=1){
+        printf("Choisissez la partition à utiliseravec \".bin\" \n");
+        scanf("%s", buffer1);
+        if (myFormat(buffer1) == 0) {
+            printf("Partition initialisée avec succès.\n");
+            init=1;
+        } else {
+            printf("Échec de l'initialisation de la partition.\n");
+    }
+    }
     while (1) {
         printf("\nMenu:\n");
         printf("1. Initialiser / Réinitialiser la partition\n");
