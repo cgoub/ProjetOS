@@ -20,10 +20,10 @@ int myFormat(char* partitionName) {
     strcpy(partition,partitionName);
 
     // Ajout de fichier vide dans la partition
-    f.dispo=1;
-    f.taille=0;
     for (int i = 0; i < PARTITION_SIZE; i += BLOCK_SIZE) {
-        f.debut=sizeof(file)+i;
+        f.dispo=1;
+        f.taille=0;
+        f.debut=i;
         f.position=sizeof(file)+i;
         write(open_partition, &f, sizeof(file));
     }
@@ -34,6 +34,7 @@ int myFormat(char* partitionName) {
 // Fonction d'ouverture de fichier
 file* myOpen(char* fileName) {
     file* new_file=(file*)malloc(sizeof(file));
+    file f;
     int i=0;
     int open_partition = open(partition, O_RDWR);
     if (open_partition == -1) {
@@ -41,19 +42,17 @@ file* myOpen(char* fileName) {
         return NULL; // Échec de l'ouverture
     }
 
-    //read(open_partition, new_file, sizeof(file));
+    read(open_partition, &f, sizeof(file));
     //Parcours de la partition
-    while(i<PARTITION_SIZE && new_file->dispo !=1 && strcmp(new_file->nom, fileName) != 0){
-        lseek(open_partition, i , SEEK_SET);
-        read(open_partition, new_file, sizeof(file));
+    while(i<PARTITION_SIZE && f.dispo !=1 && strcmp(f.nom, fileName) != 0){
+        read(open_partition, &f, sizeof(file));
         i+=BLOCK_SIZE;
-    }
-    printf("%d",i);
-
-    if(new_file->dispo == 1){            
-        strcpy(new_file->nom ,fileName);
-        new_file->dispo = 0;
-        write(open_partition, new_file, sizeof(file));
+    }    
+    if(f.dispo == 1){            
+        strcpy(f.nom ,fileName);
+        f.dispo = 0;
+        lseek(open_partition, f.debut, SEEK_SET);
+        write(open_partition, &f, sizeof(file));
     }    
     //Si le fichier n'a pas été trouvé
     else if(i == PARTITION_SIZE){
@@ -61,10 +60,7 @@ file* myOpen(char* fileName) {
         return NULL; // La partition est pleine 
     }    
 
-    printf("dispo %d\n",new_file->dispo);
-    printf("debut %d\n",new_file->debut);
-    printf("nom %s\n",new_file->nom);
-    
+    *new_file=f;
     close(open_partition);
 
     return new_file;
@@ -103,9 +99,9 @@ int myRead(file* f, void* buffer, int nBytes) {
         perror("parametres invalides");
         return -1; // Paramètres invalides
     }
-    printf("%d\n",f->debut);
+    // printf("%d\n",f->debut);
     int open_partition = open(partition, O_RDONLY);
-    lseek(open_partition, f->debut, SEEK_SET);
+    lseek(open_partition, (f->debut+sizeof(file)), SEEK_SET);
     int bytes_read = read(open_partition, buffer, nBytes);
     if (bytes_read < 0) {
         perror("erreur de lecture");
@@ -139,43 +135,37 @@ void mySeek(file* f, int offset, int base) {
 
 }
 
-// // Fonction de fermeture de fichier
-// void myClose(file* f) {
-//     if (f == NULL) {
-//         return; // Paramètre invalide
-//     }
-
-//     free(f->nom);
-//     free(f);
-// }
 
 // Fonction de test basique
 int main() {
     char buffer1[10];
     myFormat("test.bin");
+    file f;
+    int open_partition = open(partition, O_RDWR);
     file* test=myOpen("test.txt");
-    //myRead(test,buffer1,10);
+    printf("dispo sortie %d\n",test->dispo);
+    myRead(test,buffer1,10);
     printf("myread test1: %s\n",buffer1);
-    
+    printf("\n");
     file* test2=myOpen("test2.txt");
-    //myRead(test2,buffer1,10);
+    myRead(test2,buffer1,10);
     printf("nom test2: %s\n",test2->nom);
     printf("myRead test2: %s\n",buffer1);
 
     char write[15]="bjr c'est moi";
     myWrite(test,write,15);
-    myRead(test,buffer1,10);
-    // printf("nom test1 :%s\n",test->nom);
+    myRead(test,buffer1,15);
+    printf("nom test1 :%s\n",test->nom);
     printf("myRead 3: %s\n",buffer1);
 
 
     char buffer2[10];
     char write2[15]="hello world";
     myWrite(test2,write2,15);
-    myRead(test2,buffer2,10);
+    myRead(test2,buffer2,15);
     printf("myRead 4: %s\n",buffer2);
 
-    myRead(test,buffer1,10);
+    myRead(test,buffer1,15);
     printf("myRead 5: %s\n",buffer1);
 
     // // Test de création de fichier
