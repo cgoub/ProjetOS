@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include "main.h"
 
-char partition [20];
+char partition [20]="test.bin";
 
 // Fonction de formatage de la partition
 int myFormat(char* partitionName) {
@@ -20,13 +20,11 @@ int myFormat(char* partitionName) {
     strcpy(partition,partitionName);
 
     // Ajout de fichier vide dans la partition
-    //f.nom="";
-    f.position=0;
     f.dispo=1;
     f.taille=0;
     for (int i = 0; i < PARTITION_SIZE; i += BLOCK_SIZE) {
-        f.debut=i;
-        printf("%d\n",f.debut);
+        f.debut=sizeof(file)+i;
+        f.position=sizeof(file)+i;
         write(open_partition, &f, sizeof(file));
     }
     close(open_partition);
@@ -37,42 +35,35 @@ int myFormat(char* partitionName) {
 file* myOpen(char* fileName) {
     file* new_file=(file*)malloc(sizeof(file));
     int i=0;
-    int j=0;
     int open_partition = open(partition, O_RDWR);
     if (open_partition == -1) {
         perror("echec de l'ouverture");
         return NULL; // Échec de l'ouverture
     }
 
-    read(open_partition, new_file, sizeof(file));
+    //read(open_partition, new_file, sizeof(file));
     //Parcours de la partition
     while(i<PARTITION_SIZE && new_file->dispo !=1 && strcmp(new_file->nom, fileName) != 0){
-        lseek(open_partition, i * BLOCK_SIZE, SEEK_SET);
+        lseek(open_partition, i , SEEK_SET);
         read(open_partition, new_file, sizeof(file));
         i+=BLOCK_SIZE;
     }
+    printf("%d",i);
 
+    if(new_file->dispo == 1){            
+        strcpy(new_file->nom ,fileName);
+        new_file->dispo = 0;
+        write(open_partition, new_file, sizeof(file));
+    }    
     //Si le fichier n'a pas été trouvé
-    if(i > PARTITION_SIZE){
-        lseek(open_partition,0, SEEK_SET);
-        while(j<PARTITION_SIZE && new_file->dispo != 1){
-            new_file->dispo=0;
-            strcpy(new_file->nom,fileName);
-            read(open_partition, new_file, sizeof(file));
-            j+=BLOCK_SIZE;
-        }
-        if(j<PARTITION_SIZE){   
-            strcpy(new_file->nom ,fileName);
-            new_file->dispo = 0;
-            new_file->position = j;
-            new_file->debut = j;
-            lseek(open_partition, -sizeof(file), SEEK_CUR);
-            write(open_partition, new_file, sizeof(file));
-        }
-        else{
-            return NULL; // La partition est pleine 
-        }
-    }
+    else if(i == PARTITION_SIZE){
+        perror("partition pleine \n");
+        return NULL; // La partition est pleine 
+    }    
+
+    printf("dispo %d\n",new_file->dispo);
+    printf("debut %d\n",new_file->debut);
+    printf("nom %s\n",new_file->nom);
     
     close(open_partition);
 
@@ -92,7 +83,7 @@ int myWrite(file* f, void* buffer, int nBytes) {
     }
 
     // Positionnez le curseur au début du fichier dans la partition
-    lseek(open_partition, f->debut, SEEK_SET);
+    lseek(open_partition, f->position , SEEK_SET);
     int bytes_written = write(open_partition, buffer, nBytes);
     if (bytes_written < 0) {
         perror("erreur d'écriture");
@@ -100,8 +91,9 @@ int myWrite(file* f, void* buffer, int nBytes) {
     }
 
     f->taille += bytes_written;
+    f->position += bytes_written;
     close(open_partition);
-    printf("nb bytes ecrit: %d",bytes_written);
+    printf("nb bytes ecrit: %d\n",bytes_written);
     return bytes_written;
 }
 
@@ -162,22 +154,29 @@ int main() {
     char buffer1[10];
     myFormat("test.bin");
     file* test=myOpen("test.txt");
-    myRead(test,buffer1,10);
+    //myRead(test,buffer1,10);
     printf("myread test1: %s\n",buffer1);
     
     file* test2=myOpen("test2.txt");
-    myRead(test2,buffer1,10);
+    //myRead(test2,buffer1,10);
+    printf("nom test2: %s\n",test2->nom);
     printf("myRead test2: %s\n",buffer1);
 
     char write[15]="bjr c'est moi";
     myWrite(test,write,15);
     myRead(test,buffer1,10);
+    // printf("nom test1 :%s\n",test->nom);
     printf("myRead 3: %s\n",buffer1);
 
+
+    char buffer2[10];
     char write2[15]="hello world";
     myWrite(test2,write2,15);
-    myRead(test2,buffer1,10);
-    printf("myRead 4: %s\n",buffer1);
+    myRead(test2,buffer2,10);
+    printf("myRead 4: %s\n",buffer2);
+
+    myRead(test,buffer1,10);
+    printf("myRead 5: %s\n",buffer1);
 
     // // Test de création de fichier
     // if (myFormat("partition.txt") != 0) {
